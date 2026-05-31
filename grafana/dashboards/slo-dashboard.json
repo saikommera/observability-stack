@@ -1,0 +1,72 @@
+{
+  "title": "SLO / Error Budget Dashboard",
+  "uid": "slo-error-budget",
+  "tags": ["slo", "sre", "error-budget"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Availability (30d rolling)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [{
+        "expr": "1 - (sum(rate(http_requests_total{code=~'5..'}[30d])) / sum(rate(http_requests_total[30d])))",
+        "legendFormat": "Availability"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "yellow", "value": 0.999},
+              {"color": "green", "value": 0.9995}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Error Budget Remaining",
+      "type": "gauge",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "targets": [{
+        "expr": "1 - ((sum(rate(http_requests_total{code=~'5..'}[30d])) / sum(rate(http_requests_total[30d]))) / (1 - 0.999))",
+        "legendFormat": "Budget Remaining"
+      }]
+    },
+    {
+      "id": 3,
+      "title": "Error Rate (5m)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "targets": [{
+        "expr": "sum(rate(http_requests_total{code=~'5..'}[5m])) / sum(rate(http_requests_total[5m]))",
+        "legendFormat": "Error Rate"
+      }]
+    },
+    {
+      "id": 4,
+      "title": "DORA - Deployment Frequency",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "targets": [{
+        "expr": "count_over_time(deployment_total[7d]) / 7",
+        "legendFormat": "Deploys/day"
+      }]
+    },
+    {
+      "id": 5,
+      "title": "DORA - MTTR (hours)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+      "targets": [{
+        "expr": "avg(incident_recovery_duration_seconds) / 3600",
+        "legendFormat": "MTTR"
+      }]
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 1
+}
