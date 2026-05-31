@@ -1,0 +1,41 @@
+groups:
+  - name: slo-alerts
+    interval: 1m
+    rules:
+      # Fast burn: 2% budget consumed in 1 hour (14.4x burn rate)
+      - alert: SLOErrorBudgetFastBurn
+        expr: |
+          (
+            sum(rate(http_requests_total{code=~"5.."}[1h])) /
+            sum(rate(http_requests_total[1h]))
+          ) > (14.4 * (1 - 0.999))
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Fast error budget burn on {{ $labels.service }}"
+          description: "Error budget burning at 14.4x rate. Will exhaust in ~1 hour."
+          runbook_url: "https://runbooks.internal/slo-fast-burn"
+
+      # Slow burn: 5% budget consumed in 6 hours (6x burn rate)
+      - alert: SLOErrorBudgetSlowBurn
+        expr: |
+          (
+            sum(rate(http_requests_total{code=~"5.."}[6h])) /
+            sum(rate(http_requests_total[6h]))
+          ) > (6 * (1 - 0.999))
+        for: 15m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Slow error budget burn on {{ $labels.service }}"
+          description: "Error budget burning at 6x rate. Will exhaust in ~5 days."
+
+      - alert: HighMTTR
+        expr: avg_over_time(incident_duration_seconds[7d]) > 3600
+        labels:
+          severity: warning
+        annotations:
+          summary: "MTTR exceeds 1 hour SLO target"
